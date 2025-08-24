@@ -1,0 +1,26 @@
+# Compiled executables
+server
+create_config
+
+# Configuration files
+config.bin
+*.dict
+(sample)compression.dict
+
+# Test files directory
+files/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# OS files
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Debug files
+*.dSYM/
