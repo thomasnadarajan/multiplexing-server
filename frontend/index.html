@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplexing Server Client</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Multiplexing Server Client</h1>
+        
+        <div class="connection-panel">
+            <h2>Connection</h2>
+            <div class="input-group">
+                <label for="serverAddress">Server Address:</label>
+                <input type="text" id="serverAddress" value="localhost" placeholder="localhost">
+            </div>
+            <div class="input-group">
+                <label for="serverPort">Port:</label>
+                <input type="number" id="serverPort" value="8080" placeholder="8080">
+            </div>
+            <button id="connectBtn" class="btn-primary">Connect</button>
+            <button id="disconnectBtn" class="btn-secondary" disabled>Disconnect</button>
+            <div id="connectionStatus" class="status">Disconnected</div>
+        </div>
+
+        <div class="operations-panel" id="operationsPanel" style="display: none;">
+            <h2>Operations</h2>
+            
+            <div class="operation-section">
+                <h3>Echo Message</h3>
+                <div class="input-group">
+                    <label for="echoMessage">Message:</label>
+                    <input type="text" id="echoMessage" placeholder="Enter message to echo">
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="echoCompress">
+                        Request Compression
+                    </label>
+                </div>
+                <button id="sendEchoBtn" class="btn-action">Send Echo</button>
+            </div>
+
+            <div class="operation-section">
+                <h3>File Operations</h3>
+                <div class="input-group">
+                    <label for="fileName">File Name:</label>
+                    <input type="text" id="fileName" placeholder="Enter file name">
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="fileCompress">
+                        Request Compression
+                    </label>
+                </div>
+                <button id="getFileSizeBtn" class="btn-action">Get File Size</button>
+                <button id="retrieveFileBtn" class="btn-action">Retrieve File</button>
+            </div>
+
+            <div class="operation-section">
+                <h3>Directory Listing</h3>
+                <button id="listDirBtn" class="btn-action">List Directory</button>
+            </div>
+        </div>
+
+        <div class="response-panel">
+            <h2>Response</h2>
+            <div id="responseArea" class="response-area">
+                <p class="placeholder">Responses will appear here...</p>
+            </div>
+            <button id="clearResponseBtn" class="btn-secondary">Clear</button>
+        </div>
+
+        <div class="log-panel">
+            <h2>Connection Log</h2>
+            <div id="logArea" class="log-area">
+                <p class="placeholder">Connection logs will appear here...</p>
+            </div>
+            <button id="clearLogBtn" class="btn-secondary">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>

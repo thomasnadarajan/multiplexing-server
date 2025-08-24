@@ -1,0 +1,16 @@
+{
+  "name": "multiplexing-server-frontend",
+  "version": "1.0.0",
+  "description": "Web frontend client for multiplexing TCP server",
+  "main": "proxy-server.js",
+  "scripts": {
+    "start": "node proxy-server.js",
+    "dev": "nodemon proxy-server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
