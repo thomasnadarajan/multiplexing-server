@@ -62,11 +62,15 @@ void remove_node(List ** list, file_request * input) {
     Check whether request currently exists in the list and return it if so.
 */
 file_request * find(List ** list, file_request * input) {
+    pthread_mutex_lock(&(*list)->lock);
     file_request * curr = (*list)->head;
     while (curr != NULL) {
         if (curr->session_id == input->session_id) {
+            pthread_mutex_unlock(&(*list)->lock);
             return curr;
         }
+        curr = curr->next;
     }
+    pthread_mutex_unlock(&(*list)->lock);
     return NULL;
 }

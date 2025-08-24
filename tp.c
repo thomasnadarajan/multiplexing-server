@@ -17,7 +17,10 @@ thread_pool * tp_create(char * config_name, struct sockaddr_in * sock) {
     tp->shut = 0;
     create_map(&(tp->data.dict));
     for (int i = 0 ; i < 20; i++) {
-        pthread_create(&(tp->threads[i]), NULL, thread_worker, tp);
+        if (pthread_create(&(tp->threads[i]), NULL, thread_worker, tp) != 0) {
+            perror("pthread_create failed");
+            exit(1);
+        }
     }
     get_config(config_name, sock, &(tp->data.directory));
     tp->requests_list = create();
@@ -102,7 +105,6 @@ void client_handling(int * clfd, thread_pool * input) {
             //  If the client closed the connection, break from the loop.
             if (msg == NULL) {
                 close(main);
-                free(msg);
                 free(clfd);
                 return;
             }
@@ -168,7 +170,6 @@ void client_handling(int * clfd, thread_pool * input) {
                     add(&(input->requests_list), req);
                     parent_send(main, msg->main.requires_compression, 
                         input->data.directory, &req, &(input->data.dict));
-                    pthread_mutex_lock(&req->node_lock);
                     remove_node(&(input->requests_list), req);
                }
                
@@ -181,7 +182,10 @@ void client_handling(int * clfd, thread_pool * input) {
                 input->shut = 1;
                 pthread_cond_broadcast(&input->cond_var);
                 int * f;
-                while((f = dequeue(input)) != NULL);
+                while((f = dequeue(input)) != NULL) {
+                    close(*f);
+                    free(f);
+                }
                 for (int i = 0; i < 256; i++) {
                     free(input->data.dict[i].code);
                 }
