@@ -133,6 +133,9 @@ class MultiplexingClient {
             return;
         }
         
+        // Store the filename for when we receive the response
+        this.pendingFileName = fileName;
+        
         const data = {
             type: 'retrieve',
             payload: fileName,
@@ -166,7 +169,9 @@ class MultiplexingClient {
                     this.addResponse(`File size: ${response.data} bytes`, 'success');
                     break;
                 case 'file':
-                    this.handleFileResponse(response.data);
+                    console.log('File response received, calling handleFileResponse');
+                    this.handleFileResponse(response.data, this.pendingFileName, response.encoding);
+                    this.pendingFileName = null; // Clear after use
                     break;
                 case 'list':
                     this.handleDirectoryListing(response.data);
@@ -175,25 +180,74 @@ class MultiplexingClient {
                     this.addResponse(`Error: ${response.message}`, 'error');
                     break;
                 default:
+                    console.log('Unknown response type:', response.type, 'Full response:', response);
                     this.addResponse(`Unknown response type: ${response.type}`);
+                    // If it looks like file data, show it
+                    if (response.data) {
+                        this.addResponse(response.data);
+                    }
             }
         } catch (e) {
             this.addResponse(`Failed to parse response: ${e.message}`, 'error');
         }
     }
 
-    handleFileResponse(data) {
-        if (data.length > 1000) {
-            this.addResponse(`File retrieved (${data.length} bytes) - content truncated for display`, 'success');
-            this.addResponse(data.substring(0, 1000) + '...');
-        } else {
-            this.addResponse(`File content (${data.length} bytes):`, 'success');
-            this.addResponse(data);
+    handleFileResponse(data, filename, encoding) {
+        console.log('handleFileResponse called with:', {
+            dataLength: data ? data.length : 0,
+            filename: filename,
+            encoding: encoding
+        });
+        
+        let binaryData;
+        
+        try {
+            if (encoding === 'base64') {
+                // Convert base64 to binary
+                console.log('Decoding base64 data...');
+                const binaryString = atob(data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                binaryData = bytes;
+                console.log('Decoded to', binaryData.length, 'bytes');
+            } else {
+                // Handle as text
+                console.log('Encoding as text...');
+                binaryData = new TextEncoder().encode(data);
+            }
+            
+            // Create blob and trigger download
+            const blob = new Blob([binaryData], { type: 'application/octet-stream' });
+            const url = window.URL.createObjectURL(blob);
+            console.log('Created blob URL:', url);
+            
+            // Create a temporary anchor element to trigger download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || 'download';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            console.log('Triggering download for:', a.download);
+            a.click();
+            
+            // Clean up with a small delay
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            this.addResponse(`File downloaded: ${filename || 'file'} (${binaryData.length} bytes)`, 'success');
+        } catch (error) {
+            console.error('Error in handleFileResponse:', error);
+            this.addResponse(`Error downloading file: ${error.message}`, 'error');
         }
     }
 
     handleDirectoryListing(data) {
-        const files = data.split('\n').filter(f => f.trim());
+        // Server uses null bytes as separators
+        const files = data.split('\0').filter(f => f.trim());
         this.addResponse(`Directory listing (${files.length} items):`, 'success');
         files.forEach(file => {
             this.addResponse(`  - ${file}`);
