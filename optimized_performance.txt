@@ -1,0 +1,9 @@
+OPTIMIZED PERFORMANCE RESULTS
+Total Duration: 0.0612
+Test 1: 0.0374 sec, 10000 ops
+Test 2: 0.0010 sec, 1000 ops
+Test 3: 0.0002 sec, 20000 ops
+Test 4: 0.0000 sec, 100 ops
+Test 5: 0.0000 sec, 300 ops
+Test 6: 0.0226 sec, 10000 ops
+Test 7: 0.0000 sec, 100 ops
