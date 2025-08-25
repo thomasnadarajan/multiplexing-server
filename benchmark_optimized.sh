@@ -233,12 +233,6 @@ echo "✓ TCP_NODELAY (reduced latency)"
 echo "✓ Larger socket buffers (65KB)"
 echo "✓ Larger listen backlog (1024)"
 echo ""
-echo "Expected improvements over baseline:"
-echo "- Higher throughput (>200K req/sec possible)"
-echo "- Lower average latency (<0.25ms possible)"
-echo "- Better scalability with concurrent clients"
-echo "- More consistent performance under load"
-echo ""
 
 # Cleanup
 echo "Cleaning up..."
