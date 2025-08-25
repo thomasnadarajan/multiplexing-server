@@ -6,8 +6,8 @@ all: server create_config
 server: server.c 
 	gcc -pthread -g -o $@ $< $(DEPS) -lm
 
-server_optimized: server.c
-	gcc -pthread -O3 -march=native -o $@ $< tp_optimized.c message_handling.c compression.c multiplexlist.c memory_pool.c -lm
+server_optimized_standalone: server_optimized.c
+	gcc -pthread -O3 -march=native -o $@ $< message_handling.c compression.c multiplexlist.c memory_pool.c -lm
 
 create_config: create_config.c
 	gcc -o $@ $<
