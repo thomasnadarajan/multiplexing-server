@@ -68,7 +68,7 @@ static int* cq_dequeue(circular_queue *q) {
     return item;
 }
 
-thread_pool * tp_create_optimized(char * config_name, struct sockaddr_in * sock) {
+thread_pool * tp_create(char * config_name, struct sockaddr_in * sock) {
     thread_pool_optimized * tp = calloc(1, sizeof(thread_pool_optimized));
     if (!tp) return NULL;
     
@@ -98,7 +98,7 @@ thread_pool * tp_create_optimized(char * config_name, struct sockaddr_in * sock)
     return (thread_pool *)tp;
 }
 
-void enqueue_optimized(int * clfd, thread_pool * input) {
+void enqueue(int * clfd, thread_pool * input) {
     thread_pool_optimized *tp = (thread_pool_optimized *)input;
     
     pthread_mutex_lock(&tp->mutex);
