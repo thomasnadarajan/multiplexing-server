@@ -18,5 +18,11 @@ performance_tests: performance_tests.c
 performance_tests_optimized: performance_tests_optimized.c
 	gcc -pthread -O3 -march=native -o $@ $< compression_optimized.c multiplexlist.c memory_pool.c -lm
 
+benchmark_comparison: benchmark_comparison.c
+	gcc -pthread -O2 -o $@ $< memory_pool.c compression.c multiplexlist.c -lm
+
+benchmark_realistic: benchmark_realistic.c
+	gcc -pthread -O2 -o $@ $< memory_pool.c -lm
+
 clean:
-	rm -f server server_optimized create_config config.bin performance_tests performance_tests_optimized baseline_performance.txt optimized_performance.txt
+	rm -f server server_optimized create_config config.bin performance_tests performance_tests_optimized baseline_performance.txt optimized_performance.txt benchmark_comparison benchmark_results.txt
