@@ -27,6 +27,10 @@ int main(int argc, char ** argv) {
     socklen_t addr_size;
     addr_size = sizeof(struct sockaddr_in);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        perror("Failed to create socket");
+        return 1;
+    }
     server_addr.sin_family = AF_INET;
     // Setup thread pool.
     thread_pool * tp = tp_create(argv[1], &server_addr);
@@ -50,6 +54,11 @@ int main(int argc, char ** argv) {
             break;
         }
         int * cl = malloc(sizeof(int));
+        if (!cl) {
+            perror("Failed to allocate memory for client");
+            close(clfd);
+            continue;
+        }
         *cl = clfd;
         pthread_mutex_lock(&tp->mutex);
         enqueue(cl, tp);

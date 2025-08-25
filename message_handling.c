@@ -126,13 +126,25 @@ void echo(int sockfd, message * input, m_node ** compressor) {
     using the stat library. Compress where appropriate. Takes in compression struct.
 */
 void file_size_response(int sockfd, message ** input, char * directory, m_node ** compressor) {
-    char * path = malloc(strlen((char*) directory) + 1 + strlen((char*) (*input)->buffer) + 1);
-    strcpy(path, (char*) directory);
-    path[strlen((char *) directory)] = '/';
-    strcpy(path + strlen(directory) + 1, (char *) (*input)->buffer);
-    path[strlen(directory) + 1 + strlen((char*) (*input)->buffer)] = '\0';
+    // Validate filename doesn't contain path traversal
+    char *filename = (char*) (*input)->buffer;
+    if (strstr(filename, "..") != NULL || strchr(filename, '/') != NULL) {
+        error_send(sockfd);
+        return;
+    }
+    
+    // Use snprintf to prevent buffer overflow
+    size_t path_len = strlen(directory) + strlen(filename) + 2;
+    char * path = malloc(path_len);
+    if (!path) {
+        error_send(sockfd);
+        return;
+    }
+    snprintf(path, path_len, "%s/%s", directory, filename);
+    
     int fd = open(path, O_RDONLY);
     if (fd == -1) {
+        free(path);
         error_send(sockfd);
         return;
     }
@@ -141,6 +153,7 @@ void file_size_response(int sockfd, message ** input, char * directory, m_node *
     stat(path, &st);
     uint64_t size = st.st_size;
     close(fd);
+    free(path);
     char header;
     // Set the message header appropriately, but compress since bit set.
     if ((*input)->main.requires_compression == 1) {
@@ -266,12 +279,21 @@ file_request * dissect_file_request(message * input) {
 }
 
 void child_send(int sockfd, int compressed, char * directory, file_request ** input, m_node ** dict) {
-    // Construct path to file received from the request.
-    char * path = malloc(strlen((char*) directory) + 1 + strlen((char *)(*input)->file_name) + 1);
-    strcpy(path, (char *) directory);
-    path[strlen((char *) directory)] = '/';
-    strcpy(path + strlen((char *)directory) + 1, (char*) (*input)->file_name);
-    path[strlen((char *) directory) + 1 + strlen((char*) (*input)->file_name)] = '\0';
+    // Validate filename doesn't contain path traversal
+    char *filename = (char *)(*input)->file_name;
+    if (strstr(filename, "..") != NULL || strchr(filename, '/') != NULL) {
+        error_send(sockfd);
+        return;
+    }
+    
+    // Use snprintf to prevent buffer overflow
+    size_t path_len = strlen(directory) + strlen(filename) + 2;
+    char * path = malloc(path_len);
+    if (!path) {
+        error_send(sockfd);
+        return;
+    }
+    snprintf(path, path_len, "%s/%s", directory, filename);
     // Pull offset and length from pipe contained in the file request.
     uint64_t o_l[2];
     read((*input)->pipefd[0], o_l, 16);
@@ -286,10 +308,18 @@ void child_send(int sockfd, int compressed, char * directory, file_request ** in
     o_l[0] = bswap_64(o_l[0]);
     o_l[1] = bswap_64(o_l[1]);
     int fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        free(buffer);
+        free(path);
+        error_send(sockfd);
+        return;
+    }
     // Seek to location in file.
     lseek(fd, o_l[0], SEEK_SET);
     // Read contents of file into buffer.
     read(fd, buffer + 20, o_l[1]);
+    close(fd);
+    free(path);
     if (compressed == 1) {
         message * msg = malloc(sizeof(message));
         msg->buffer = buffer;
@@ -324,22 +354,29 @@ void child_send(int sockfd, int compressed, char * directory, file_request ** in
         free(send_container);
         free(buffer);
     }
-    // Final cleanup
-    free(path);
-    close(fd);
 }
 
 void parent_send(int sockfd, int compressed, char * directory, file_request ** input, m_node ** dict) {
-    // Create path to file.
-    char * path = malloc(strlen((char*) directory) + 1 + strlen((char *)((*input)->file_name)) + 1);
-    strcpy(path, (char *) directory);
-    path[strlen((char *) directory)] = '/';
-    strcpy(path + strlen((char *)directory) + 1, (char*) (*input)->file_name);
-    path[strlen((char *) directory) + 1 + strlen((char*) (*input)->file_name)] = '\0';
+    // Validate filename doesn't contain path traversal
+    char *filename = (char *)((*input)->file_name);
+    if (strstr(filename, "..") != NULL || strchr(filename, '/') != NULL) {
+        error_send(sockfd);
+        return;
+    }
+    
+    // Use snprintf to prevent buffer overflow
+    size_t path_len = strlen(directory) + strlen(filename) + 2;
+    char * path = malloc(path_len);
+    if (!path) {
+        error_send(sockfd);
+        return;
+    }
+    snprintf(path, path_len, "%s/%s", directory, filename);
 
     int fd = open(path, O_RDONLY);
 
     if (fd == -1) {
+        free(path);
         error_send(sockfd);
         return;
     }
@@ -348,6 +385,8 @@ void parent_send(int sockfd, int compressed, char * directory, file_request ** i
     stat(path, &st);
 
     if ((*input)->offset > st.st_size || (*input)->offset + (*input)->length > st.st_size) {
+        close(fd);
+        free(path);
         error_send(sockfd);
         return;
     }

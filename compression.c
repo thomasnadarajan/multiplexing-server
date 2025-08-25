@@ -11,11 +11,25 @@
 void create_map(m_node ** compressor) {
     (*compressor) = malloc(256 * sizeof(m_node));
     int fd = open("(sample)compression.dict", O_RDONLY);
+    if (fd == -1) {
+        perror("Failed to open compression dictionary");
+        exit(1);
+    }
     struct stat st;
-    stat("(sample)compression.dict", &st);
+    if (stat("(sample)compression.dict", &st) == -1) {
+        close(fd);
+        perror("Failed to stat compression dictionary");
+        exit(1);
+    }
     int size = st.st_size;
     unsigned char * buffer = malloc(size);
+    if (!buffer) {
+        close(fd);
+        perror("Failed to allocate memory for compression dictionary");
+        exit(1);
+    }
     read(fd, buffer, size);
+    close(fd);
     int count = 0;
     unsigned char curr = 0x00;
     int current_byte = 0;
