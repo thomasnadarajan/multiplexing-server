@@ -4,7 +4,7 @@
 #include "message_handling.h"
 #include "compression.h"
 #include "multiplexlist.h"
-#include <byteswap.h>
+#include "byteswap_compat.h"
 /*
     Create a thread pool, and store compression dict and config details within.
 */

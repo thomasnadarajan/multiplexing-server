@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <byteswap.h>
+#include "byteswap_compat.h"
 #include <errno.h>
 #include <dirent.h>
 #include "compression.h"
